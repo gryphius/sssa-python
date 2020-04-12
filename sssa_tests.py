@@ -18,5 +18,17 @@ class TestStringMethods(unittest.TestCase):
 
         self.assertEqual(sss.combine(shares), "test-pass")
 
+    def test_add_share(self):
+        secret='the cake is a lie'
+        sss = sssa()
+        shares = sss.create(3,5,secret)
+        self.assertEqual(len(shares),5)
+        # restore secret using original shares
+        self.assertEqual(sss.combine(shares[:3]),secret)
+        # add new share and restore secret with a mix of original and new share
+        new_shares = sss.add_share(shares)
+        self.assertEqual(len(new_shares),6)
+        self.assertEqual(sss.combine(new_shares[-3:]),secret)
+
 if __name__ == '__main__':
     unittest.main()

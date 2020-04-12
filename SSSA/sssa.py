@@ -69,3 +69,30 @@ class sssa:
                 secret[part_index] = (secret[part_index] + working) % self.util.prime
 
         return self.util.merge_ints(secret)
+
+    def add_share(self, shares):
+        # The "raw" secret is padded with \x00 and split into 32 char (64 hex) chunks: for each part there will be a polynomial.
+        # The result of 'create' still has "shares" entries, but each is a \sum_i^parts x_i+y_i.
+        # Reconstruct points on the polynomial(s) from the shares
+        x,y=self.util.shares_to_x_y(shares)
+
+        # Initialize known numbers
+        numbers = []
+        for parts in x:
+            numbers.extend(parts)
+
+        # For each polynomial, interpolate another point
+        new_share = ""
+        for pol_nr in range(len(x)):
+            value = self.util.random()
+            while value in numbers:
+                value = self.util.random()
+            numbers.append(value)
+
+            y_interpolated = self.util.lagrange_interpolate(value,x[pol_nr],y[pol_nr],self.util.prime)
+
+            new_share += self.util.to_base64(value)
+            new_share += self.util.to_base64(y_interpolated)
+
+        shares.append(new_share)
+        return shares
